@@ -154,6 +154,7 @@ namespace Obfuscar
         {
             try
             {
+               
                 // Parse the command line arguments
                 var parsedArgs = ParseCommandLine(args);
                 

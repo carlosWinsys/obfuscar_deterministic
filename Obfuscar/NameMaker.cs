@@ -52,7 +52,7 @@ namespace Obfuscar
             // Fill the char array used for renaming with characters
             // from Hangul (Korean) unicode character set.
             var chars = new List<char>(128);
-            var rnd = new Random();
+            var rnd = new Random(30);
             var startPoint = rnd.Next(0xAC00, 0xD5D0);
             for (int i = startPoint; i < startPoint + 128; i++)
                 chars.Add((char) i);

@@ -167,7 +167,7 @@ namespace Obfuscar
                 // ReSharper disable once AssignNullToNotNullAttribute
                 string outName = Path.Combine(outPath, fileName);
                 LoggerService.Logger.LogDebug("Copying excluded assembly: {0} to {1}", copyInfo.Name, outName);
-                copyInfo.Definition.Write(outName);
+                File.Copy(copyInfo.FileName, outName, overwrite: true);
             }
 
             // Cecil does not properly update the name cache, so force that:
@@ -189,6 +189,8 @@ namespace Obfuscar
                     // ReSharper disable once AssignNullToNotNullAttribute
                     string outName = Path.Combine(outPath, fileName);
                     var parameters = new WriterParameters();
+                    parameters.DeterministicMvid = true;
+                    parameters.Timestamp = 0;
                     if (Project.Settings.RegenerateDebugInfo)
                     {
                         LoggerService.Logger.LogDebug("Regenerating debug info for assembly: {0}", info.Name);
@@ -1525,6 +1527,14 @@ namespace Obfuscar
             private bool _initialized;
             private bool _disabled;
 
+            private static int _detGuidCounter;
+
+            private static string NextDeterministicGuid()
+            {
+                var bytes = Guid.Empty.ToByteArray();
+                BitConverter.GetBytes(_detGuidCounter++).CopyTo(bytes, 0);
+                return new Guid(bytes).ToString("B").ToUpper();
+            }
             public StringSqueeze(AssemblyDefinition library)
             {
                 _library = library;
@@ -1581,11 +1591,11 @@ namespace Obfuscar
                         "System.String System.Text.Encoding::GetString(System.Byte[],System.Int32,System.Int32)"));
 
                     // New static class with a method for each unique string we substitute.
-                    string guid = Guid.NewGuid().ToString().ToUpper();
+                    string guid = NextDeterministicGuid().ToString().ToUpper();
 
                     TypeDefinition newType = new TypeDefinition(
                         "<PrivateImplementationDetails>{" + guid + "}",
-                        Guid.NewGuid().ToString().ToUpper(),
+                        NextDeterministicGuid().ToString().ToUpper(),
                         TypeAttributes.BeforeFieldInit | TypeAttributes.AutoClass | TypeAttributes.AnsiClass |
                         TypeAttributes.BeforeFieldInit, SystemObjectTypeReference);
 
